@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BeautyEffect</string>
+    <string name="photo_capture_button"></string>
 </resources>
