@@ -4,6 +4,7 @@
 
     <uses-feature android:name="android.hardware.camera.any"/>
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -13,10 +14,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BeautyEffect">
         <activity
-            android:name=".CameraActivity"
+            android:name=".activity.CameraActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

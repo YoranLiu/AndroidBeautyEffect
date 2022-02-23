@@ -1,10 +1,12 @@
-package com.jack.beautyeffect
+package com.jack.beautyeffect.activity
 
 import android.Manifest
+import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.camera.core.*
@@ -14,16 +16,21 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.jack.beautyeffect.databinding.ActivityCameraBinding
 import java.lang.Exception
+import java.text.SimpleDateFormat
+import java.util.concurrent.Executors
 
 class CameraActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCameraBinding
 
     private var preview: Preview? = null
-    private var imageCaputre: ImageCapture? = null
+    private var imageCapture: ImageCapture? = null
     private var ImageAnalyzer: ImageAnalysis? = null
     private var camera: Camera? = null
-    private lateinit var viewFinder: PreviewView
     private var lensFacing = CameraSelector.LENS_FACING_FRONT
+    private lateinit var viewFinder: PreviewView
+
+    private val cameraExecutor  = Executors.newSingleThreadExecutor()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         binding = ActivityCameraBinding.inflate(layoutInflater)
@@ -38,13 +45,30 @@ class CameraActivity : AppCompatActivity() {
             startCamera()
         }
 
+         // camera switch btn
+        val cameraSwitchBtn = binding.cameraSwitchBtn
+        cameraSwitchBtn.setOnClickListener {
+            if(lensFacing == CameraSelector.LENS_FACING_FRONT) {
+                lensFacing = CameraSelector.LENS_FACING_BACK
+                Toast.makeText(this, "Switch to rear camera", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            else {
+                lensFacing = CameraSelector.LENS_FACING_FRONT
+                Toast.makeText(this, "Switch to front camera", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            startCamera()
+        }
+
         val camera_capture_btn = binding.cameraCaptureBtn
 
         camera_capture_btn.setOnClickListener {
             takePhoto()
         }
-
     }
+
+
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -54,24 +78,17 @@ class CameraActivity : AppCompatActivity() {
             // preview
             preview = Preview.Builder()
                 .build()
+            // image capture
+            imageCapture = ImageCapture.Builder()
+                .build()
 
-            // camera switch btn (not yet implemented)
-//            val cameraSwitchBtn = binding.cameraSwitchBtn
-//            cameraSwitchBtn.setOnClickListener {
-//                lensFacing = if(CameraSelector.LENS_FACING_FRONT == lensFacing) {
-//                    CameraSelector.LENS_FACING_BACK
-//                } else {
-//                    CameraSelector.LENS_FACING_FRONT
-//                }
-//                Log.d(TAG, "startCamera: clicked")
-//            }
             // select camera(front or back)
             val cameraSelector = CameraSelector.Builder().requireLensFacing(lensFacing)
                 .build()
 
             try {
                 cameraProvider.unbindAll()
-                camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview)
+                camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
 
                 preview?.setSurfaceProvider(viewFinder.surfaceProvider)
 
@@ -83,7 +100,33 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun takePhoto() {
+        // if imageCapure is null(click take photo button before starting camera), then return
+        val imageCapture = imageCapture?: return
 
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME,
+                FILENAME_PREFIX + SimpleDateFormat(FILENAME_FORMAT).format(System.currentTimeMillis()))
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+        }
+
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(
+                contentResolver,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues)
+            .build()
+
+        imageCapture.takePicture(
+            outputOptions, ContextCompat.getMainExecutor(this), object: ImageCapture.OnImageSavedCallback {
+                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                    Log.d(TAG, "Photo Saved: " + outputFileResults.savedUri?.path)
+                    Toast.makeText(baseContext, "Photo saved", Toast.LENGTH_SHORT)
+                        .show()
+                }
+
+                override fun onError(exception: ImageCaptureException) {
+                    Log.e(TAG, "Photo capture failed: ${exception.message}", exception)
+                }
+            })
     }
 
     override fun onRequestPermissionsResult(
@@ -110,7 +153,9 @@ class CameraActivity : AppCompatActivity() {
 
     companion object {
         private val TAG = CameraActivity::class.java.simpleName
+        private const val FILENAME_PREFIX = "beauty_"
+        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss"
         private const val permisionRC = 100
-        private val permissions = listOf(Manifest.permission.CAMERA)
+        private val permissions = listOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 }

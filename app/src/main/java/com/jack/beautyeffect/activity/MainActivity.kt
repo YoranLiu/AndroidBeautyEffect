@@ -1,4 +1,4 @@
-package com.jack.beautyeffect
+package com.jack.beautyeffect.activity
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -20,5 +20,10 @@ class MainActivity : AppCompatActivity() {
                     startActivity(this)
                 }
         }
+
+
+    }
+    companion object {
+        private val TAG = MainActivity::class.java.simpleName
     }
 }
