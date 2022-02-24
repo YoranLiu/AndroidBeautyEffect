@@ -1,9 +1,11 @@
 package com.jack.beautyeffect.activity
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -14,7 +16,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.jack.beautyeffect.BitmapUtils
 import com.jack.beautyeffect.databinding.ActivityCameraBinding
+import com.kmint.alanfacem.ai.FaceDetector
 import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.concurrent.Executors
@@ -22,9 +26,10 @@ import java.util.concurrent.Executors
 class CameraActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCameraBinding
 
+    private lateinit var faceDetector: FaceDetector
     private var preview: Preview? = null
     private var imageCapture: ImageCapture? = null
-    private var ImageAnalyzer: ImageAnalysis? = null
+    private var imageAnalyzer: ImageAnalysis? = null
     private var camera: Camera? = null
     private var lensFacing = CameraSelector.LENS_FACING_FRONT
     private lateinit var viewFinder: PreviewView
@@ -69,7 +74,11 @@ class CameraActivity : AppCompatActivity() {
     }
 
 
+    @SuppressLint("UnsafeOptInUsageError")
     private fun startCamera() {
+        faceDetector = FaceDetector()
+        val faceNumInfo = binding.faceNumInfo
+
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener(Runnable {
@@ -78,6 +87,39 @@ class CameraActivity : AppCompatActivity() {
             // preview
             preview = Preview.Builder()
                 .build()
+
+            // image analysis
+            imageAnalyzer = ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
+                .build()
+
+            imageAnalyzer!!.setAnalyzer(cameraExecutor,  { image ->
+                val bitmap = BitmapUtils.imageToBitmap(image.image!!, image.imageInfo.rotationDegrees)
+
+                faceDetector.detect(image) { faces ->
+                    faceNumInfo.setText("FaceNum: ${faces.size}")
+                    if (faces.size > 0)
+                        faceNumInfo.setTextColor(Color.RED)
+                    else
+                        faceNumInfo.setTextColor(Color.BLACK)
+
+                    faces.forEach { face->
+                        // get face bounding box
+                        val faceBox = face.boundingBox
+                        val landmarks = face.allLandmarks
+                        Log.d(TAG, "BoundingBox: " + faceBox)
+                        Log.d(TAG, "Landmarks: " + landmarks)
+                    }
+
+                }
+
+            })
+
+
+
+
+
             // image capture
             imageCapture = ImageCapture.Builder()
                 .build()
@@ -88,7 +130,13 @@ class CameraActivity : AppCompatActivity() {
 
             try {
                 cameraProvider.unbindAll()
-                camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
+                camera = cameraProvider.bindToLifecycle(
+                    this,
+                    cameraSelector,
+                    preview,
+                    imageAnalyzer,
+                    imageCapture
+                )
 
                 preview?.setSurfaceProvider(viewFinder.surfaceProvider)
 
