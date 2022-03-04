@@ -2,7 +2,10 @@ package com.kmint.alanfacem.ai
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
@@ -14,7 +17,7 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 class FaceDetector {
     private var faceOptions: FaceDetectorOptions = FaceDetectorOptions.Builder()
         .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-        .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
+        //.setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
         .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
         .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
         .build()
@@ -23,6 +26,7 @@ class FaceDetector {
 
     @SuppressLint("UnsafeOptInUsageError")
     fun detect(image: ImageProxy, callback: (List<Face>) -> Unit) {
+
         detector.process(InputImage.fromMediaImage(image.image!!, image.imageInfo.rotationDegrees))
             .addOnSuccessListener { faces ->
                 Log.d(TAG, "Number of faces: ${faces.size}")
@@ -34,7 +38,6 @@ class FaceDetector {
             .addOnCompleteListener {
                 image.close()
             }
-
     }
 
     companion object {

@@ -5,20 +5,28 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import android.util.Size
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.toRectF
 import com.jack.beautyeffect.BitmapUtils
 import com.jack.beautyeffect.databinding.ActivityCameraBinding
+import com.jack.beautyeffect.view.ResultView
 import com.kmint.alanfacem.ai.FaceDetector
+import java.io.File
 import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.concurrent.Executors
@@ -28,21 +36,25 @@ class CameraActivity : AppCompatActivity() {
 
     private lateinit var faceDetector: FaceDetector
     private var preview: Preview? = null
+    private var resultView: ResultView? = null
     private var imageCapture: ImageCapture? = null
     private var imageAnalyzer: ImageAnalysis? = null
     private var camera: Camera? = null
     private var lensFacing = CameraSelector.LENS_FACING_FRONT
     private lateinit var viewFinder: PreviewView
+    private lateinit var bitmap: Bitmap
 
     private val cameraExecutor  = Executors.newSingleThreadExecutor()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        binding = ActivityCameraBinding.inflate(layoutInflater)
         super.onCreate(savedInstanceState)
+        binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         viewFinder = binding.viewFinder
+        resultView = binding.resultView
+
         if (!hasPermissions(this)) {
             ActivityCompat.requestPermissions(this, permissions.toTypedArray(), permisionRC)
         }
@@ -65,17 +77,31 @@ class CameraActivity : AppCompatActivity() {
             }
             startCamera()
         }
-
         val camera_capture_btn = binding.cameraCaptureBtn
 
         camera_capture_btn.setOnClickListener {
             takePhoto()
+//            if (bitmap != null) {
+//                val filePath = Environment.getExternalStorageDirectory().getAbsolutePath() +
+//                        "/saved"
+//                val dir = File(filePath)
+//                if(!dir.exists())
+//                    dir.mkdirs()
+//                File(filePath, "map.png").writeBitmap(bitmap, Bitmap.CompressFormat.PNG, 85)
+//            }
         }
     }
 
+    private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
+        outputStream().use { out ->
+            bitmap.compress(format, quality, out)
+            out.flush()
+        }
+    }
 
     @SuppressLint("UnsafeOptInUsageError")
     private fun startCamera() {
+        Log.d(TAG, "lensFacing: " + lensFacing)
         faceDetector = FaceDetector()
         val faceNumInfo = binding.faceNumInfo
 
@@ -95,35 +121,40 @@ class CameraActivity : AppCompatActivity() {
                 .build()
 
             imageAnalyzer!!.setAnalyzer(cameraExecutor,  { image ->
-                val bitmap = BitmapUtils.imageToBitmap(image.image!!, image.imageInfo.rotationDegrees)
+                bitmap = BitmapUtils.imageToBitmap(image.image!!, image.imageInfo.rotationDegrees)
+
+                resultView!!.frameSize = Size(bitmap.width, bitmap.height) // 640 x 480
+                 Log.d(TAG, "Image info: ${bitmap.width} ${bitmap.height}")
 
                 faceDetector.detect(image) { faces ->
                     faceNumInfo.setText("FaceNum: ${faces.size}")
-                    if (faces.size > 0)
+                    if (faces.size > 0) {
                         faceNumInfo.setTextColor(Color.RED)
-                    else
+                    }
+
+                    else {
                         faceNumInfo.setTextColor(Color.BLACK)
+                    }
 
                     faces.forEach { face->
                         // get face bounding box
                         val faceBox = face.boundingBox
-                        val landmarks = face.allLandmarks
-                        Log.d(TAG, "BoundingBox: " + faceBox)
-                        Log.d(TAG, "Landmarks: " + landmarks)
-                    }
 
+                        val landmarks = face.allLandmarks
+                        val faceContours = face.allContours
+                        Log.d(TAG, "BoundingBox: " + faceBox + " " + faceBox.toRectF() + " x value:" + faceBox.left)
+                        //Log.d(TAG, "Landmarks: " + landmarks)
+                        //Log.d(TAG, "Contours: " + faceContours)
+
+                    }
+                    resultView!!.updateFaces(faces, lensFacing)
                 }
 
             })
 
-
-
-
-
             // image capture
             imageCapture = ImageCapture.Builder()
                 .build()
-
             // select camera(front or back)
             val cameraSelector = CameraSelector.Builder().requireLensFacing(lensFacing)
                 .build()

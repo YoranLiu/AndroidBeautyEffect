@@ -11,8 +11,13 @@
         android:id="@+id/viewFinder"
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
-
     </androidx.camera.view.PreviewView>
+
+    <com.jack.beautyeffect.view.ResultView
+        android:id="@+id/resultView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"/>
 
     <TextView
         android:id="@+id/face_num_info"
