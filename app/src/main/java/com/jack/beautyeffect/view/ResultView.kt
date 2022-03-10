@@ -47,7 +47,6 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
         this.faces = faces
         this.lensFacing = lensFacing
         this.bitmap = bitmap
-        restoreVerts()
         invalidate()
     }
 
@@ -76,7 +75,6 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
         super.onDraw(canvas)
         if (canvas != null) {
             // canvas size equals to view size
-
             viewWidth = width.toFloat()
             viewHeight = height.toFloat()
             frameWidth = frameSize.width.toFloat()
@@ -95,10 +93,11 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
 //                    bitmap = Bitmap.createBitmap(bitmap!!, 0, 0, bitmap!!.width, bitmap!!.height, transformMatrix, false)
 //                }
 
-                 canvas.drawBitmap(bitmap!!, 500f,500f, boxPaint)
+                 canvas.drawBitmap(bitmap!!, 500f,0f, boxPaint)
 
                 // need to check if countours have been detected
                 if (face.allContours.size > 11) {
+
 //                    canvas.drawPoint(translateX(faceOval[25].x), translateY(faceOval[25].y), boxPaint)
 //                    canvas.drawPoint(translateX(faceOval[11].x), translateY(faceOval[11].y), boxPaint)
 //                    canvas.drawPoint(translateX(faceOval[21].x), translateY(faceOval[21].y), boxPaint)
@@ -123,17 +122,22 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
                     // we choose nose bridge point index 1 as center point
                     canvas.drawPoint(noseBridge[1].x, noseBridge[1].y, boxPaint)
 
-                    val a = SmallFaceUtils(GRID_W, GRID_H, COUNT, verts, level=10)
+                    val smallFaceUtils = SmallFaceUtils(GRID_W, GRID_H, COUNT, verts, level=4)
 
-                    verts = a.warpFace(faceOval[25].x, faceOval[25].y, noseBridge[1].x, noseBridge[1].y)
-
-                    verts = a.warpFace(faceOval[21].x, faceOval[21].y, noseBridge[1].x, noseBridge[1].y)
-
-                    verts = a.warpFace(faceOval[11].x, faceOval[11].y, noseBridge[1].x, noseBridge[1].y)
-
-                    verts = a.warpFace(faceOval[15].x, faceOval[15].y, noseBridge[1].x, noseBridge[1].y)
+                    verts = smallFaceUtils.warpFace(faceOval[25].x, faceOval[25].y, noseBridge[1].x, noseBridge[1].y)
+                    verts = smallFaceUtils.warpFace(faceOval[21].x, faceOval[21].y, noseBridge[1].x, noseBridge[1].y)
+                    verts = smallFaceUtils.warpFace(faceOval[11].x, faceOval[11].y, noseBridge[1].x, noseBridge[1].y)
+                    verts = smallFaceUtils.warpFace(faceOval[15].x, faceOval[15].y, noseBridge[1].x, noseBridge[1].y)
+                    verts = smallFaceUtils.warpFace(faceOval[25].x, faceOval[25].y, noseBridge[1].x, noseBridge[1].y)
+                    verts = smallFaceUtils.warpFace(faceOval[21].x, faceOval[21].y, noseBridge[1].x, noseBridge[1].y)
+                    verts = smallFaceUtils.warpFace(faceOval[11].x, faceOval[11].y, noseBridge[1].x, noseBridge[1].y)
+                    verts = smallFaceUtils.warpFace(faceOval[15].x, faceOval[15].y, noseBridge[1].x, noseBridge[1].y)
+                    verts = smallFaceUtils.warpFace(faceOval[17].x, faceOval[17].y, noseBridge[1].x, noseBridge[1].y)
+                    verts = smallFaceUtils.warpFace(faceOval[19].x, faceOval[19].y, noseBridge[1].x, noseBridge[1].y)
 
                     canvas.drawBitmapMesh(bitmap!!, GRID_W, GRID_H, verts, 0, null, 0, boxPaint)
+                    invalidate()
+                    restoreVerts()
                 }
 
 //                faceBoxF.set(

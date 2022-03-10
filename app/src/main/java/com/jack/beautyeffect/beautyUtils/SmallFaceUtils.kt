@@ -4,6 +4,29 @@ import android.graphics.*
 
 class SmallFaceUtils(var gridW: Int, var gridH: Int, var count: Int, var verts: FloatArray, var level: Int = 5) {
 
+//    val GRID_W = 200
+//    val GRID_H = 200
+//
+//    fun smallFace(bitmap: Bitmap): Bitmap {
+//        val COUNT = (GRID_W + 1) * (GRID_H + 1)
+//        val verts = FloatArray(COUNT * 2)
+//        val bitmapW = bitmap.width
+//        val bitmapH = bitmap.height
+//
+//        var idx = 0
+//
+//        for (i in 0 until GRID_H + 1) {
+//            val fy: Float = bitmapH * i / SmallFaceUtils.HEIGHT
+//            for (j in 0 until GRID_W + 1) {
+//                val fx: Float = bmWidth * j / SmallFaceUtils.WIDTH
+//                //X轴坐标 放在偶数位
+//                verts[idx * 2] = fx
+//                //Y轴坐标 放在奇数位
+//                verts[idx * 2 + 1] = fy
+//                idx += 1
+//            }
+//        }
+//    }
      fun warpFace (
         startX: Float,
         startY: Float,
