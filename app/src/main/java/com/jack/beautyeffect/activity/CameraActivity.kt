@@ -46,7 +46,6 @@ class CameraActivity : AppCompatActivity() {
 
     private val cameraExecutor  = Executors.newSingleThreadExecutor()
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCameraBinding.inflate(layoutInflater)
@@ -65,7 +64,7 @@ class CameraActivity : AppCompatActivity() {
          // camera switch btn
         val cameraSwitchBtn = binding.cameraSwitchBtn
         cameraSwitchBtn.setOnClickListener {
-            if(lensFacing == CameraSelector.LENS_FACING_FRONT) {
+            if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
                 lensFacing = CameraSelector.LENS_FACING_BACK
                 Toast.makeText(this, "Switch to rear camera", Toast.LENGTH_SHORT)
                     .show()
@@ -80,17 +79,17 @@ class CameraActivity : AppCompatActivity() {
         val camera_capture_btn = binding.cameraCaptureBtn
 
         camera_capture_btn.setOnClickListener {
-            takePhoto()
-//            if (bitmap != null) {
-//                val filePath = Environment.getExternalStorageDirectory().getAbsolutePath() +
-//                        "/saved"
-//                val dir = File(filePath)
-//                if(!dir.exists())
-//                    dir.mkdirs()
-//                File(filePath, "map.png").writeBitmap(bitmap, Bitmap.CompressFormat.PNG, 85)
-//            }
+            //takePhoto()
+
+            if (bitmap != null) {
+
+                MediaStore.Images.Media.insertImage(contentResolver, bitmap, "title", "description")
+                Toast.makeText(this, "saved", Toast.LENGTH_SHORT)
+                    .show()
+            }
         }
     }
+
 
     private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
         outputStream().use { out ->
@@ -121,9 +120,13 @@ class CameraActivity : AppCompatActivity() {
                 .build()
 
             imageAnalyzer!!.setAnalyzer(cameraExecutor,  { image ->
+                // front camera: 270 degrees, back camera: 90 degrees
+                Log.d(TAG, "RotationDegree: " + image.imageInfo.rotationDegrees)
+
                 bitmap = BitmapUtils.imageToBitmap(image.image!!, image.imageInfo.rotationDegrees)
 
-                resultView!!.frameSize = Size(bitmap.width, bitmap.height) // 640 x 480
+                // original W x H: 640 x 480, need to flip to 480 x 640
+                resultView!!.frameSize = Size(bitmap.width, bitmap.height) // 480 x 640
                  Log.d(TAG, "Image info: ${bitmap.width} ${bitmap.height}")
 
                 faceDetector.detect(image) { faces ->
@@ -140,14 +143,14 @@ class CameraActivity : AppCompatActivity() {
                         // get face bounding box
                         val faceBox = face.boundingBox
 
-                        val landmarks = face.allLandmarks
+                        //val landmarks = face.allLandmarks
                         val faceContours = face.allContours
                         Log.d(TAG, "BoundingBox: " + faceBox + " " + faceBox.toRectF() + " x value:" + faceBox.left)
                         //Log.d(TAG, "Landmarks: " + landmarks)
                         //Log.d(TAG, "Contours: " + faceContours)
 
                     }
-                    resultView!!.updateFaces(faces, lensFacing)
+                    resultView!!.updateFaces(faces, lensFacing, bitmap)
                 }
 
             })
