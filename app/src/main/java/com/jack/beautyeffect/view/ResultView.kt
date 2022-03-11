@@ -27,7 +27,7 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
     private var faceBoxF = RectF()
 
     private var bitmap: Bitmap? = null
-    private var transformMatrix = Matrix()
+    private lateinit var transformMatrix: Matrix
 
     val GRID_W = 200
     val GRID_H = 200
@@ -47,25 +47,10 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
         this.faces = faces
         this.lensFacing = lensFacing
         this.bitmap = bitmap
+        transformMatrix = Matrix()
         invalidate()
     }
 
-    private fun restoreVerts() {
-        var idx = 0
-        val bmWidth = bitmap!!.width.toFloat()
-        val bmHeight = bitmap!!.height.toFloat()
-        for (i in 0 until GRID_H + 1) {
-            val fy: Float = bmHeight * i / GRID_H
-            for (j in 0 until GRID_W + 1) {
-                val fx: Float = bmWidth * j / GRID_W
-                //X轴坐标 放在偶数位
-                verts[idx * 2] = fx
-                //Y轴坐标 放在奇数位
-                verts[idx * 2 + 1] = fy
-                idx += 1
-            }
-        }
-    }
     // In front camera situation, the detection result coordinates will be mirror, we need to reverse these coordinates
     private fun translateX(x: Float) = if (lensFacing == CameraSelector.LENS_FACING_FRONT) bitmap!!.width - x
                                         else x
@@ -79,7 +64,7 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
             viewHeight = height.toFloat()
             frameWidth = frameSize.width.toFloat()
             frameHeight = frameSize.height.toFloat()
-
+            Log.d(TAG, "onDraw: " + viewHeight + " " + viewWidth) // 2036 x 1080
             // calculate factor between view size and frame size to scale
             xFactor = viewWidth / frameWidth
             yFactor = viewHeight / frameHeight
@@ -90,54 +75,45 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
 
 //                if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
 //                    transformMatrix.postScale(-1.0f, 1.0f)
+//                    transformMatrix.postScale(xFactor, yFactor)
 //                    bitmap = Bitmap.createBitmap(bitmap!!, 0, 0, bitmap!!.width, bitmap!!.height, transformMatrix, false)
 //                }
-
-                 canvas.drawBitmap(bitmap!!, 500f,0f, boxPaint)
+//
+//                 canvas.drawBitmap(bitmap!!, 0f,0f, boxPaint)
 
                 // need to check if countours have been detected
                 if (face.allContours.size > 11) {
-
-//                    canvas.drawPoint(translateX(faceOval[25].x), translateY(faceOval[25].y), boxPaint)
-//                    canvas.drawPoint(translateX(faceOval[11].x), translateY(faceOval[11].y), boxPaint)
-//                    canvas.drawPoint(translateX(faceOval[21].x), translateY(faceOval[21].y), boxPaint)
-//                    canvas.drawPoint(translateX(faceOval[15].x), translateY(faceOval[15].y), boxPaint)
-
-//                    canvas.drawPoint(translateX(faceOval[25].x), faceOval[25].y, boxPaint)
-//                    canvas.drawPoint(translateX(faceOval[11].x), faceOval[11].y, boxPaint)
-//                    canvas.drawPoint(translateX(faceOval[21].x), faceOval[21].y, boxPaint)
-//                    canvas.drawPoint(translateX(faceOval[15].x), faceOval[15].y, boxPaint)
-
 
                     // we choose 2 left face points, 2 right face points, and 1 center point to do warping face
                     // we select point index 25, 21(left face points), 11, 15(right face points): the four keypoints
                     // face.allContours[0]: Face oval(36 points), face.allContours[11]: Nose bridge(2 points)
                     val faceOval = face.allContours[0].points
                     val noseBridge = face.allContours[11].points
-                    canvas.drawPoint(faceOval[25].x, faceOval[25].y, boxPaint)
-                    canvas.drawPoint(faceOval[21].x, faceOval[21].y, boxPaint)
-                    canvas.drawPoint(faceOval[11].x, faceOval[11].y, boxPaint)
-                    canvas.drawPoint(faceOval[15].x, faceOval[15].y, boxPaint)
 
-                    // we choose nose bridge point index 1 as center point
-                    canvas.drawPoint(noseBridge[1].x, noseBridge[1].y, boxPaint)
 
-                    val smallFaceUtils = SmallFaceUtils(GRID_W, GRID_H, COUNT, verts, level=4)
+                    if (lensFacing == CameraSelector.LENS_FACING_FRONT)
+                        transformMatrix.postScale(-1.0f, 1.0f)
+                    else
+                        transformMatrix.postScale(1.0f, 1.0f)
+                    //transformMatrix.postScale(2f,2f)
+                    var resultBitmap = SmallFaceUtils().smallFace(bitmap!!, faceOval, noseBridge, 4)
+                    transformMatrix.postScale(xFactor, yFactor)
+                    resultBitmap = Bitmap.createBitmap(
+                        resultBitmap,
+                        0,
+                        0,
+                        resultBitmap.width,
+                        resultBitmap.height,
+                        transformMatrix,
+                        false
+                    )
+                    canvas.drawBitmap(resultBitmap, 0f,0f, null)
 
-                    verts = smallFaceUtils.warpFace(faceOval[25].x, faceOval[25].y, noseBridge[1].x, noseBridge[1].y)
-                    verts = smallFaceUtils.warpFace(faceOval[21].x, faceOval[21].y, noseBridge[1].x, noseBridge[1].y)
-                    verts = smallFaceUtils.warpFace(faceOval[11].x, faceOval[11].y, noseBridge[1].x, noseBridge[1].y)
-                    verts = smallFaceUtils.warpFace(faceOval[15].x, faceOval[15].y, noseBridge[1].x, noseBridge[1].y)
-                    verts = smallFaceUtils.warpFace(faceOval[25].x, faceOval[25].y, noseBridge[1].x, noseBridge[1].y)
-                    verts = smallFaceUtils.warpFace(faceOval[21].x, faceOval[21].y, noseBridge[1].x, noseBridge[1].y)
-                    verts = smallFaceUtils.warpFace(faceOval[11].x, faceOval[11].y, noseBridge[1].x, noseBridge[1].y)
-                    verts = smallFaceUtils.warpFace(faceOval[15].x, faceOval[15].y, noseBridge[1].x, noseBridge[1].y)
-                    verts = smallFaceUtils.warpFace(faceOval[17].x, faceOval[17].y, noseBridge[1].x, noseBridge[1].y)
-                    verts = smallFaceUtils.warpFace(faceOval[19].x, faceOval[19].y, noseBridge[1].x, noseBridge[1].y)
-
-                    canvas.drawBitmapMesh(bitmap!!, GRID_W, GRID_H, verts, 0, null, 0, boxPaint)
-                    invalidate()
-                    restoreVerts()
+//                    canvas.drawPoint(translateX(faceOval[25].x), faceOval[25].y, boxPaint)
+//                    canvas.drawPoint(translateX(faceOval[21].x), faceOval[21].y, boxPaint)
+//                    canvas.drawPoint(translateX(faceOval[11].x), faceOval[11].y, boxPaint)
+//                    canvas.drawPoint(translateX(faceOval[15].x), faceOval[15].y, boxPaint)
+//                    canvas.drawPoint(translateX(noseBridge[1].x), noseBridge[1].y, boxPaint)
                 }
 
 //                faceBoxF.set(

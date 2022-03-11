@@ -79,14 +79,14 @@ class CameraActivity : AppCompatActivity() {
         val camera_capture_btn = binding.cameraCaptureBtn
 
         camera_capture_btn.setOnClickListener {
-            //takePhoto()
+            takePhoto()
 
-            if (bitmap != null) {
-
-                MediaStore.Images.Media.insertImage(contentResolver, bitmap, "title", "description")
-                Toast.makeText(this, "saved", Toast.LENGTH_SHORT)
-                    .show()
-            }
+//            if (bitmap != null) {
+//
+//                MediaStore.Images.Media.insertImage(contentResolver, bitmap, "title", "description")
+//                Toast.makeText(this, "saved", Toast.LENGTH_SHORT)
+//                    .show()
+//            }
         }
     }
 
@@ -102,7 +102,7 @@ class CameraActivity : AppCompatActivity() {
     private fun startCamera() {
         Log.d(TAG, "lensFacing: " + lensFacing)
         faceDetector = FaceDetector()
-        val faceNumInfo = binding.faceNumInfo
+//        val faceNumInfo = binding.faceNumInfo
 
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -115,6 +115,8 @@ class CameraActivity : AppCompatActivity() {
 
             // image analysis
             imageAnalyzer = ImageAnalysis.Builder()
+                //.setTargetAspectRatio(AspectRatio.RATIO_16_9)
+                .setTargetResolution(Size(1080, 2036))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                 .build()
@@ -122,7 +124,7 @@ class CameraActivity : AppCompatActivity() {
             imageAnalyzer!!.setAnalyzer(cameraExecutor,  { image ->
                 // front camera: 270 degrees, back camera: 90 degrees
                 Log.d(TAG, "RotationDegree: " + image.imageInfo.rotationDegrees)
-
+                Log.d(TAG, "Camera resolution: " + image.width + " " + image.height)
                 bitmap = BitmapUtils.imageToBitmap(image.image!!, image.imageInfo.rotationDegrees)
 
                 // original W x H: 640 x 480, need to flip to 480 x 640
@@ -130,14 +132,14 @@ class CameraActivity : AppCompatActivity() {
                  Log.d(TAG, "Image info: ${bitmap.width} ${bitmap.height}")
 
                 faceDetector.detect(image) { faces ->
-                    faceNumInfo.setText("FaceNum: ${faces.size}")
-                    if (faces.size > 0) {
-                        faceNumInfo.setTextColor(Color.RED)
-                    }
-
-                    else {
-                        faceNumInfo.setTextColor(Color.BLACK)
-                    }
+//                    faceNumInfo.setText("FaceNum: ${faces.size}")
+//                    if (faces.size > 0) {
+//                        faceNumInfo.setTextColor(Color.RED)
+//                    }
+//
+//                    else {
+//                        faceNumInfo.setTextColor(Color.BLACK)
+//                    }
 
                     faces.forEach { face->
                         // get face bounding box

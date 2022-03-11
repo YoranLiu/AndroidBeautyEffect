@@ -16,10 +16,8 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 
 class FaceDetector {
     private var faceOptions: FaceDetectorOptions = FaceDetectorOptions.Builder()
-        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-        //.setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
+        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST) // Accuracy or Fast mode
         .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
-        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
         .build()
 
     private var detector: FaceDetector = FaceDetection.getClient(faceOptions)
