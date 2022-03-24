@@ -1,4 +1,4 @@
-# AndroidBeautyEffect
+# 美顏功能APP
 ## 瘦臉
 瘦臉效果展示:
 
