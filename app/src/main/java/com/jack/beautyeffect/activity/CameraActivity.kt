@@ -15,6 +15,8 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
+import android.widget.SeekBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -26,6 +28,7 @@ import com.jack.beautyeffect.BitmapUtils
 import com.jack.beautyeffect.databinding.ActivityCameraBinding
 import com.jack.beautyeffect.view.ResultView
 import com.kmint.alanfacem.ai.FaceDetector
+import org.w3c.dom.Text
 import java.io.File
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -36,14 +39,17 @@ class CameraActivity : AppCompatActivity() {
 
     private lateinit var faceDetector: FaceDetector
     private var preview: Preview? = null
-    private var resultView: ResultView? = null
     private var imageCapture: ImageCapture? = null
     private var imageAnalyzer: ImageAnalysis? = null
     private var camera: Camera? = null
     private var lensFacing = CameraSelector.LENS_FACING_FRONT
     private lateinit var viewFinder: PreviewView
+    private lateinit var resultView: ResultView
+    private lateinit var faceSeekBar: SeekBar
+    private lateinit var faceStrength: TextView
     private lateinit var bitmap: Bitmap
 
+    private var faceStrengthFactor = 0
     private val cameraExecutor  = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +59,8 @@ class CameraActivity : AppCompatActivity() {
 
         viewFinder = binding.viewFinder
         resultView = binding.resultView
+        faceSeekBar = binding.faceSeekBar
+        faceStrength = binding.faceStrength
 
         if (!hasPermissions(this)) {
             ActivityCompat.requestPermissions(this, permissions.toTypedArray(), permisionRC)
@@ -88,6 +96,21 @@ class CameraActivity : AppCompatActivity() {
 //                    .show()
 //            }
         }
+
+        faceSeekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                faceStrength.text = progress.toString()
+                faceStrengthFactor = progress
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                Log.d(TAG, "onStartTrackingTouch: ")
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                Log.d(TAG, "onStopTrackingTouch: ")
+            }
+        })
     }
 
 
@@ -102,7 +125,7 @@ class CameraActivity : AppCompatActivity() {
     private fun startCamera() {
         Log.d(TAG, "lensFacing: " + lensFacing)
         faceDetector = FaceDetector()
-//        val faceNumInfo = binding.faceNumInfo
+
 
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -115,8 +138,7 @@ class CameraActivity : AppCompatActivity() {
 
             // image analysis
             imageAnalyzer = ImageAnalysis.Builder()
-                //.setTargetAspectRatio(AspectRatio.RATIO_16_9)
-                .setTargetResolution(Size(1080, 2036))
+                .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                 .build()
@@ -132,14 +154,6 @@ class CameraActivity : AppCompatActivity() {
                  Log.d(TAG, "Image info: ${bitmap.width} ${bitmap.height}")
 
                 faceDetector.detect(image) { faces ->
-//                    faceNumInfo.setText("FaceNum: ${faces.size}")
-//                    if (faces.size > 0) {
-//                        faceNumInfo.setTextColor(Color.RED)
-//                    }
-//
-//                    else {
-//                        faceNumInfo.setTextColor(Color.BLACK)
-//                    }
 
                     faces.forEach { face->
                         // get face bounding box
@@ -152,7 +166,7 @@ class CameraActivity : AppCompatActivity() {
                         //Log.d(TAG, "Contours: " + faceContours)
 
                     }
-                    resultView!!.updateFaces(faces, lensFacing, bitmap)
+                    resultView!!.updateFaces(faces, lensFacing, bitmap, faceStrengthFactor)
                 }
 
             })
@@ -175,6 +189,7 @@ class CameraActivity : AppCompatActivity() {
                 )
 
                 preview?.setSurfaceProvider(viewFinder.surfaceProvider)
+
 
             } catch (exc: Exception) {
                 Log.e(TAG, "Case binding failed")

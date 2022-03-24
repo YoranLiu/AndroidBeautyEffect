@@ -4,22 +4,22 @@ import android.graphics.*
 
 class SmallFaceUtils {
 
-    val GRID_W = 200
-    val GRID_H = 200
+    val GRID_W = 20
+    val GRID_H = 20
 
     /**
      *  small Face algorithm
      *  @param bitmap: original bitmap
      *  @param facePoints: Face oval(36 points) from face.allContours[0]
      *  @param centerPoints: Nose bridge(2 points) from face.allContours[11]
-     *  @param level: level of stretch
+     *  @param strength: small face strength
      *  @return result bitmap after doing warping face process
      */
     fun smallFace(
         bitmap: Bitmap,
         facePoints: List<PointF>,
         centerPoints: List<PointF>,
-        level: Int = 5
+        strength: Int
     ): Bitmap {
         val COUNT = (GRID_W + 1) * (GRID_H + 1)
         val verts = FloatArray(COUNT * 2)
@@ -33,18 +33,21 @@ class SmallFaceUtils {
         for (i in 0 until GRID_H + 1) {
             fy = (bitmapH * i / GRID_H).toFloat()
             for (j in 0 until GRID_W + 1) {
+                // X-axis coordinates, put in even position
                 fx = (bitmapW * j / GRID_W).toFloat()
-                //X轴坐标 放在偶数位
                 verts[idx * 2] = fx
-                //Y轴坐标 放在奇数位
+
+                // Y-axis coordinates, put in odd position
                 verts[idx * 2 + 1] = fy
                 idx += 1
             }
         }
-        val r = 180 + 15 * level //level [0,4]
+        val r = 0 + (1.75 * strength).toInt()
 
 
-
+        /**
+         * Choose your own key points to do warping
+         */
         // left face points
         warpFace(verts, facePoints[25].x, facePoints[25].y, centerPoints[1].x, centerPoints[1].y, r)
         warpFace(verts, facePoints[24].x, facePoints[24].y, centerPoints[1].x, centerPoints[1].y, r)
@@ -73,7 +76,7 @@ class SmallFaceUtils {
         endY: Float,
         r: Int
     ) {
-        //计算拖动距离
+        // calculate the drag distance
         val ddPull = (endX - startX) * (endX - startX) + (endY - startY) * (endY - startY)
         var dPull = Math.sqrt(ddPull.toDouble()).toFloat()
 
@@ -86,17 +89,17 @@ class SmallFaceUtils {
         val offset = 1
         for (i in 0 until GRID_H + 1) {
             for (j in 0 until GRID_W + 1) {
-                //边界区域不处理
+                // skip bounding area
                 if (i < offset || i > GRID_H - offset || j < offset || j > GRID_W - offset) {
                     idx += 1
                     continue
                 }
-                //计算每个坐标点与触摸点之间的距离
+                // calculate the distance between each  point and the touch point
                 val dx = verts[idx * 2] - startX
                 val dy = verts[idx * 2 + 1] - startY
                 val dd = dx * dx + dy * dy
                 if (dd < powR) {
-                    //变形系数，扭曲度
+                    // torsion resistance
                     val e =
                         ((powR - dd) * (powR - dd) / ((powR - dd + dPull * dPull) * (powR - dd + dPull * dPull))).toDouble()
                     val pullX = e * (endX - startX)
