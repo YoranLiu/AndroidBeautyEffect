@@ -6,15 +6,12 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.Color
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
+import android.view.View
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
@@ -23,12 +20,12 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.toRectF
+import com.google.android.material.tabs.TabLayout
 import com.jack.beautyeffect.BitmapUtils
 import com.jack.beautyeffect.databinding.ActivityCameraBinding
 import com.jack.beautyeffect.view.ResultView
 import com.kmint.alanfacem.ai.FaceDetector
-import org.w3c.dom.Text
+import org.jetbrains.anko.tableLayout
 import java.io.File
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -38,19 +35,24 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCameraBinding
 
     private lateinit var faceDetector: FaceDetector
+
     private var preview: Preview? = null
     private var imageCapture: ImageCapture? = null
     private var imageAnalyzer: ImageAnalysis? = null
     private var camera: Camera? = null
     private var lensFacing = CameraSelector.LENS_FACING_FRONT
+
     private lateinit var viewFinder: PreviewView
     private lateinit var resultView: ResultView
-    private lateinit var faceSeekBar: SeekBar
-    private lateinit var faceStrength: TextView
+    private lateinit var seekBar: SeekBar
+    private lateinit var barStrength: TextView
+    private lateinit var tabLayout: TabLayout
     private lateinit var bitmap: Bitmap
 
     private var faceStrengthFactor = 0
+    private var functionIdx = 0
     private val cameraExecutor  = Executors.newSingleThreadExecutor()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,8 +61,44 @@ class CameraActivity : AppCompatActivity() {
 
         viewFinder = binding.viewFinder
         resultView = binding.resultView
-        faceSeekBar = binding.faceSeekBar
-        faceStrength = binding.faceStrength
+        seekBar = binding.seekBar
+        barStrength = binding.barStrength
+        tabLayout = binding.tabLayout
+
+        for (item in beautyFunctions) {
+            tabLayout.addTab(tabLayout.newTab().setText(item.key))
+        }
+
+        tabLayout.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                functionIdx = tab!!.position
+
+                Log.d(TAG, "onTabSelected: " + tab.text)
+                //seekBar.progress = beautyFunctions[tab.]
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {
+            }
+
+            override fun onTabReselected(tab: TabLayout.Tab?) {
+            }
+
+        })
+        seekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                barStrength.text = progress.toString()
+                faceStrengthFactor = progress
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                barStrength.visibility = View.VISIBLE
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                barStrength.visibility = View.INVISIBLE
+            }
+        })
+
 
         if (!hasPermissions(this)) {
             ActivityCompat.requestPermissions(this, permissions.toTypedArray(), permisionRC)
@@ -84,10 +122,11 @@ class CameraActivity : AppCompatActivity() {
             }
             startCamera()
         }
-        val camera_capture_btn = binding.cameraCaptureBtn
 
-        camera_capture_btn.setOnClickListener {
-            takePhoto()
+//        val camera_capture_btn = binding.cameraCaptureBtn
+
+//        camera_capture_btn.setOnClickListener {
+//            takePhoto()
 
 //            if (bitmap != null) {
 //
@@ -95,22 +134,7 @@ class CameraActivity : AppCompatActivity() {
 //                Toast.makeText(this, "saved", Toast.LENGTH_SHORT)
 //                    .show()
 //            }
-        }
-
-        faceSeekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                faceStrength.text = progress.toString()
-                faceStrengthFactor = progress
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                Log.d(TAG, "onStartTrackingTouch: ")
-            }
-
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                Log.d(TAG, "onStopTrackingTouch: ")
-            }
-        })
+//        }
     }
 
 
@@ -154,21 +178,8 @@ class CameraActivity : AppCompatActivity() {
                  Log.d(TAG, "Image info: ${bitmap.width} ${bitmap.height}")
 
                 faceDetector.detect(image) { faces ->
-
-                    faces.forEach { face->
-                        // get face bounding box
-                        val faceBox = face.boundingBox
-
-                        //val landmarks = face.allLandmarks
-                        val faceContours = face.allContours
-                        Log.d(TAG, "BoundingBox: " + faceBox + " " + faceBox.toRectF() + " x value:" + faceBox.left)
-                        //Log.d(TAG, "Landmarks: " + landmarks)
-                        //Log.d(TAG, "Contours: " + faceContours)
-
-                    }
                     resultView!!.updateFaces(faces, lensFacing, bitmap, faceStrengthFactor)
                 }
-
             })
 
             // image capture
@@ -254,6 +265,7 @@ class CameraActivity : AppCompatActivity() {
         private val TAG = CameraActivity::class.java.simpleName
         private const val FILENAME_PREFIX = "beauty_"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss"
+        private val beautyFunctions = mapOf("瘦臉" to 0, "磨皮" to 0, "美白" to 0) // key: function name; value: seekbar value(default set to 0)
         private const val permisionRC = 100
         private val permissions = listOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }

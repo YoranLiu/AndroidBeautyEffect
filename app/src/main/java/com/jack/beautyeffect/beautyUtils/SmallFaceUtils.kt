@@ -4,8 +4,8 @@ import android.graphics.*
 
 class SmallFaceUtils {
 
-    val GRID_W = 20
-    val GRID_H = 20
+    val GRID_W = 50
+    val GRID_H = 50
 
     /**
      *  small Face algorithm
@@ -42,7 +42,7 @@ class SmallFaceUtils {
                 idx += 1
             }
         }
-        val r = 0 + (1.75 * strength).toInt()
+        val r = 0 + (1.5 * strength).toInt()
 
 
         /**
@@ -50,15 +50,21 @@ class SmallFaceUtils {
          */
         // left face points
         warpFace(verts, facePoints[25].x, facePoints[25].y, centerPoints[1].x, centerPoints[1].y, r)
-        warpFace(verts, facePoints[24].x, facePoints[24].y, centerPoints[1].x, centerPoints[1].y, r)
-        warpFace(verts, facePoints[22].x, facePoints[22].y, centerPoints[1].x, centerPoints[1].y, r)
-        warpFace(verts, facePoints[20].x, facePoints[20].y, centerPoints[1].x, centerPoints[1].y, r)
+        warpFace(verts, facePoints[23].x, facePoints[23].y, centerPoints[1].x, centerPoints[1].y, r)
+        warpFace(verts, facePoints[21].x, facePoints[21].y, centerPoints[1].x, centerPoints[1].y, r)
+        //warpFace(verts, facePoints[24].x, facePoints[24].y, centerPoints[1].x, centerPoints[1].y, r)
+        //warpFace(verts, facePoints[22].x, facePoints[22].y, centerPoints[1].x, centerPoints[1].y, r)
+        //warpFace(verts, facePoints[20].x, facePoints[20].y, centerPoints[1].x, centerPoints[1].y, r)
 
         // right face points
         warpFace(verts, facePoints[11].x, facePoints[11].y, centerPoints[1].x, centerPoints[1].y, r)
-        warpFace(verts, facePoints[12].x, facePoints[12].y, centerPoints[1].x, centerPoints[1].y, r)
-        warpFace(verts, facePoints[14].x, facePoints[14].y, centerPoints[1].x, centerPoints[1].y, r)
-        warpFace(verts, facePoints[16].x, facePoints[16].y, centerPoints[1].x, centerPoints[1].y, r)
+        warpFace(verts, facePoints[13].x, facePoints[13].y, centerPoints[1].x, centerPoints[1].y, r)
+        warpFace(verts, facePoints[15].x, facePoints[15].y, centerPoints[1].x, centerPoints[1].y, r)
+
+
+//        warpFace(verts, facePoints[12].x, facePoints[12].y, centerPoints[1].x, centerPoints[1].y, r)
+//        warpFace(verts, facePoints[14].x, facePoints[14].y, centerPoints[1].x, centerPoints[1].y, r)
+//        warpFace(verts, facePoints[16].x, facePoints[16].y, centerPoints[1].x, centerPoints[1].y, r)
 
 
         val resultBitmap = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
@@ -94,7 +100,7 @@ class SmallFaceUtils {
                     idx += 1
                     continue
                 }
-                // calculate the distance between each  point and the touch point
+                // calculate the distance between each point and the touch point
                 val dx = verts[idx * 2] - startX
                 val dy = verts[idx * 2 + 1] - startY
                 val dd = dx * dx + dy * dy
