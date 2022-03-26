@@ -61,7 +61,7 @@ for (i in 0 until GRID_H + 1) {
 
 Google ML Kit套件可以抓取12種不同的臉部關鍵點，拉動起始點的部分選擇了則臉部最外圍的關鍵點(對應官方文件中的FACE_OVAL關鍵點)；拉動終點的部分選擇了臉部中心鼻橋的關鍵點(對應官方文件中的NOSE_BRIDGE關鍵點)，並從中選取某些點進行瘦臉操作，示意圖如下:
 
-<img src="https://github.com/YoranLiu/AndroidBeautyEffect/blob/master/small_face_diagram.JPG" width=200 height=240/>
+<img src="https://github.com/YoranLiu/AndroidBeautyEffect/blob/master/small_face_diagram.JPG" width=250 height=300/>
 
 瘦臉效果展示:
 
