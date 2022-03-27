@@ -25,7 +25,6 @@ import com.jack.beautyeffect.BitmapUtils
 import com.jack.beautyeffect.databinding.ActivityCameraBinding
 import com.jack.beautyeffect.view.ResultView
 import com.kmint.alanfacem.ai.FaceDetector
-import org.jetbrains.anko.tableLayout
 import java.io.File
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -49,8 +48,8 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var tabLayout: TabLayout
     private lateinit var bitmap: Bitmap
 
-    private var faceStrengthFactor = 0
-    private var functionIdx = 0
+    private var currentFunction = "瘦臉"
+
     private val cameraExecutor  = Executors.newSingleThreadExecutor()
 
 
@@ -65,16 +64,16 @@ class CameraActivity : AppCompatActivity() {
         barStrength = binding.barStrength
         tabLayout = binding.tabLayout
 
-        for (item in beautyFunctions) {
+        for (item in functions) {
             tabLayout.addTab(tabLayout.newTab().setText(item.key))
         }
-
         tabLayout.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                functionIdx = tab!!.position
-
-                Log.d(TAG, "onTabSelected: " + tab.text)
-                //seekBar.progress = beautyFunctions[tab.]
+                currentFunction = tab!!.text.toString()
+                seekBar.progress = functions[currentFunction]!!
+                Log.d(TAG, "Current beauty funcion: " + currentFunction)
+                Log.d(TAG, "Current function progress: " + functions[currentFunction])
+                Log.d(TAG, "onTabSelected: " + functions::class.java.simpleName)
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab?) {
@@ -84,10 +83,14 @@ class CameraActivity : AppCompatActivity() {
             }
 
         })
+
         seekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                Log.d(TAG, "onProgressChanged: " + currentFunction)
+
+                functions[currentFunction] = progress
                 barStrength.text = progress.toString()
-                faceStrengthFactor = progress
+
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -96,6 +99,7 @@ class CameraActivity : AppCompatActivity() {
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 barStrength.visibility = View.INVISIBLE
+
             }
         })
 
@@ -178,7 +182,7 @@ class CameraActivity : AppCompatActivity() {
                  Log.d(TAG, "Image info: ${bitmap.width} ${bitmap.height}")
 
                 faceDetector.detect(image) { faces ->
-                    resultView!!.updateFaces(faces, lensFacing, bitmap, faceStrengthFactor)
+                    resultView!!.updateFaces(faces, lensFacing, bitmap, functions)
                 }
             })
 
@@ -265,7 +269,10 @@ class CameraActivity : AppCompatActivity() {
         private val TAG = CameraActivity::class.java.simpleName
         private const val FILENAME_PREFIX = "beauty_"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss"
-        private val beautyFunctions = mapOf("瘦臉" to 0, "磨皮" to 0, "美白" to 0) // key: function name; value: seekbar value(default set to 0)
+
+        private val functions = mutableMapOf("瘦臉" to 0, "磨皮" to 0, "美白" to 0)
+
+
         private const val permisionRC = 100
         private val permissions = listOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
