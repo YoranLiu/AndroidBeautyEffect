@@ -69,5 +69,5 @@ Google ML Kit套件可以抓取12種不同的臉部關鍵點，拉動起始點�
 
 完整Demo連結:
 https://www.youtube.com/watch?v=k1UOJm0rrIk
-## 磨皮(尚未實作)
-## 美白(尚未實作)
+## 磨皮(待更新)
+## 美白(待更新)
