@@ -6,11 +6,16 @@ import android.util.AttributeSet
 import android.util.Log
 import android.util.Size
 import android.view.View
+import android.widget.Toast
 import androidx.camera.core.CameraSelector
 import androidx.core.graphics.get
 import androidx.core.graphics.toRectF
 import com.google.mlkit.vision.face.Face
+import com.jack.beautyeffect.beautyUtils.ResurfacingUtils
 import com.jack.beautyeffect.beautyUtils.SmallFaceUtils
+import com.jack.beautyeffect.beautyUtils.WhiteningUtils
+import jp.co.cyberagent.android.gpuimage.GPUImage
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageSketchFilter
 import java.util.LinkedHashMap
 
 class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
@@ -30,6 +35,7 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
     private var faceBoxF = RectF()
     private lateinit var transformMatrix: Matrix
 
+    private lateinit var resultBitmap: Bitmap
 
     var frameSize = Size(0, 0)
 
@@ -88,7 +94,11 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
 //                    canvas.drawBitmap(bitmap!!, 0f, 0f, facePaint)
 
                     // result bitmap
-                    var resultBitmap = SmallFaceUtils().smallFace(bitmap!!, faceOval, noseBridge, functions["瘦臉"]!!)
+
+                    resultBitmap = SmallFaceUtils().smallFace(bitmap!!, faceOval, noseBridge, functions["瘦臉"]!!)
+                    resultBitmap = ResurfacingUtils().resurface(resultBitmap, context, functions["磨皮"]!!)
+                    resultBitmap = WhiteningUtils().whitening(resultBitmap, context, functions["美白"]!!)
+
                     transformMatrix.postScale(xFactor, yFactor) // // scale to view size
                     resultBitmap = Bitmap.createBitmap(
                         resultBitmap,

@@ -205,7 +205,6 @@ class CameraActivity : AppCompatActivity() {
 
                 preview?.setSurfaceProvider(viewFinder.surfaceProvider)
 
-
             } catch (exc: Exception) {
                 Log.e(TAG, "Case binding failed")
             }
