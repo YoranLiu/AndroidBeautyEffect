@@ -25,6 +25,7 @@ import com.jack.beautyeffect.BitmapUtils
 import com.jack.beautyeffect.databinding.ActivityCameraBinding
 import com.jack.beautyeffect.view.ResultView
 import com.kmint.alanfacem.ai.FaceDetector
+import org.opencv.android.OpenCVLoader
 import java.io.File
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -57,6 +58,11 @@ class CameraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // opencv
+        if (OpenCVLoader.initDebug()) {
+            Log.i(TAG, "onCreate: " + "Open CV Lib loaded...")
+        }
 
         viewFinder = binding.viewFinder
         resultView = binding.resultView

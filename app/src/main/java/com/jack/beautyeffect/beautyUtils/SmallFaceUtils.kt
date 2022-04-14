@@ -4,8 +4,8 @@ import android.graphics.*
 
 class SmallFaceUtils {
 
-    val GRID_W = 50
-    val GRID_H = 50
+    val GRID_W = 20
+    val GRID_H = 20
 
     /**
      *  small Face algorithm

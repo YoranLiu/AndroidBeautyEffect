@@ -96,7 +96,8 @@ class ResultView(context: Context?, attrs: AttributeSet?) : View(context, attrs)
                     // result bitmap
 
                     resultBitmap = SmallFaceUtils().smallFace(bitmap!!, faceOval, noseBridge, functions["瘦臉"]!!)
-                    resultBitmap = ResurfacingUtils().resurface(resultBitmap, context, functions["磨皮"]!!)
+//                    resultBitmap = ResurfacingUtils().resurface(resultBitmap, context, functions["磨皮"]!!)
+                    resultBitmap = ResurfacingUtils().resurface(resultBitmap, functions["磨皮"]!!)
                     resultBitmap = WhiteningUtils().whitening(resultBitmap, context, functions["美白"]!!)
 
                     transformMatrix.postScale(xFactor, yFactor) // // scale to view size
